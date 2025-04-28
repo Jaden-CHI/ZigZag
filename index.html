@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>중학교 세계사 퀴즈</title>
+    <style>
+        body {
+            font-family: 'Nanum Gothic', sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .setting-box {
+            background-color: #e8f4fc;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .select-style {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 2px solid #3498db;
+            background-color: white;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+        }
+        h1 {
+            color: #3498db;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .quiz-container {
+            display: none;
+        }
+        .quiz-container.active {
+            display: block;
+        }
+        .start-screen, .result-screen {
+            text-align: center;
+        }
+        .button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #2980b9;
+        }
+        .options {
+            margin-top: 20px;
+        }
+        .option {
+            background-color: #f1f1f1;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option:hover {
+            background-color: #e0e0e0;
+        }
+        .option.correct {
+            background-color: #a8f0c6;
+            border-color: #2ecc71;
+        }
+        .option.incorrect {
+            background-color: #f0a8a8;
+            border-color: #e74c3c;
+        }
+        .question-count {
+            text-align: right;
+            margin-bottom: 20px;
+            color: #7f8c8d;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        .feedback {
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+        .timer {
+            text-align: right;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+        .history-fact {
+            background-color: #e8f4fc;
+            border-left: 4px solid #3498db;
+            padding: 10px 15px;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        .explanation {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+        .result-card {
+            background-color: #e8f4fc;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+            margin: 10px 0;
+        }
+        .medal {
+            font-size: 50px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>세계사 탐험 퀴즈</h1>
+        
+        <!-- 시작 화면 -->
+        <div class="start-screen" id="startScreen">
+            <h2>중학교 2학년 세계사 퀴즈에 오신 것을 환영합니다!</h2>
+            <p>이 퀴즈는 고대 문명부터 현대까지의 중요한 세계사 사건들을 다룹니다.</p>
+            <p>총 <span id="totalQuestions">10</span>개의 문제가 있으며, 각 문제마다 설명을 볼 수 있습니다.</p>
+            
+            <div class="setting-box">
+                <label for="questionCountSelect">문제 수 선택:</label>
+                <select id="questionCountSelect" class="select-style">
+                    <option value="10">10문제</option>
+                    <option value="20">20문제</option>
+                    <option value="30">30문제</option>
+                    <option value="50">50문제</option>
+                    <option value="100">100문제</option>
+                </select>
+            </div>
+            
+            <div class="history-fact">
+                <p><strong>알고 계셨나요?</strong> 인류 최초의 문자는 약 5,000년 전 메소포타미아의 수메르인들이 발명한 설형문자입니다.</p>
+            </div>
+            <button class="button" id="startButton">퀴즈 시작하기</button>
+        </div>
+        
+        <!-- 퀴즈 화면 -->
+        <div class="quiz-container" id="quizContainer">
+            <div class="timer" id="timer">남은 시간: 20초</div>
+            <div class="question-count" id="questionCount">문제 1/10</div>
+            <div class="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+            <h2 id="question">질문이 여기에 표시됩니다.</h2>
+            <div class="options" id="options">
+                <!-- 선택지들이 여기에 동적으로 추가됩니다 -->
+            </div>
+            <div class="feedback" id="feedback"></div>
+            <div class="explanation" id="explanation"></div>
+            <button class="button" id="nextButton" style="display: none;">다음 문제</button>
+        </div>
+        
+        <!-- 결과 화면 -->
+        <div class="result-screen" id="resultScreen" style="display: none;">
+            <h2>퀴즈 완료!</h2>
+            <div class="medal" id="medal">🏆</div>
+            <div class="score" id="score">점수: 8/10</div>
+            <div class="result-card">
+                <p id="resultMessage">훌륭합니다! 세계사에 대한 이해가 탁월합니다!</p>
+                <div class="history-fact">
+                    <p id="finalFact"><strong>알고 계셨나요?</strong> 중세 유럽에서는 약 1,000년 동안 라틴어가 학문과 종교의 공용어로 사용되었습니다.</p>
+                </div>
+            </div>
+            <button class="button" id="restartButton">다시 시작하기</button>
+        </div>
+    </div>
+
+    <script>
+        // 기본 퀴즈 데이터 (파일 로드 실패시 사용)
+        const quizData = [
+            {
+                question: "고대 이집트의 피라미드 중 가장 큰 것은 무엇인가요?",
+                options: ["쿠푸왕의 대피라미드", "카프레왕의 피라미드", "멘카우레왕의 피라미드", "조세르왕의 계단식 피라미드"],
+                correct: 0,
+                explanation: "쿠푸(Khufu)왕의 대피라미드는 기자에 위치하며 높이가 약 146미터로, 고대 이집트에서 지어진 피라미드 중 가장 큽니다. 이 피라미드는 약 230만 개의 돌을 사용하여 지어졌습니다."
+            },
+            {
+                question: "로마 제국의 첫 번째 황제는 누구인가요?",
+                options: ["카이사르(시저)", "아우구스투스", "네로", "클라우디우스"],
+                correct: 1,
+                explanation: "옥타비아누스가 기원전 27년에 '아우구스투스'라는 칭호를 받으며 로마 제국의 첫 번째 황제가 되었습니다. 그는 로마 공화정의 종말과 제국의 시작을 상징합니다."
+            },
+            {
+                question: "다음 중 실크로드의 주요 교역품이 아닌 것은?",
+                options: ["비단", "향신료", "도자기", "토마토"],
+                correct: 3,
+                explanation: "토마토는 아메리카 대륙 원산지로, 15세기 말 콜럼버스의 신대륙 발견 이후에야 유럽과 아시아에 소개되었습니다. 실크로드의 주요 교역품은 비단, 향신료, 보석, 유리, 도자기 등이었습니다."
+            },
+            {
+                question: "중세 유럽에서 흑사병(페스트)이 대유행한 시기는?",
+                options: ["12세기", "14세기", "16세기", "18세기"],
+                correct: 1,
+                explanation: "흑사병은 14세기 중반(1347-1351년)에 유럽 인구의 약 1/3을 사망하게 한 대유행병이었습니다. 이는 유럽의 사회, 경제, 종교적 구조에 큰 변화를 가져왔습니다."
+            },
+            {
+                question: "다음 중 몽골 제국을 세운 사람은?",
+                options: ["쿠빌라이 칸", "칭기즈 칸", "티무르", "훌라구"],
+                correct: 1,
+                explanation: "칭기즈 칸(1162-1227)은 몽골 부족들을 통일하고 1206년에 몽골 제국을 건설했습니다. 그의 제국은 역사상 가장 넓은 영토를 지배한 연속적인 제국 중 하나가 되었습니다."
+            },
+            {
+                question: "르네상스가 시작된 이탈리아의 도시는?",
+                options: ["로마", "베네치아", "피렌체", "나폴리"],
+                correct: 2,
+                explanation: "르네상스는 14세기 피렌체에서 시작되었습니다. 이 도시는 메디치 가문의 후원 아래 레오나르도 다빈치, 미켈란젤로와 같은 위대한 예술가들이 활동했던 문화의 중심지였습니다."
+            },
+            {
+                question: "프랑스 혁명이 시작된 해는?",
+                options: ["1776년", "1789년", "1804년", "1815년"],
+                correct: 1,
+                explanation: "프랑스 혁명은 1789년 7월 14일 바스티유 감옥 습격으로 시작되었습니다. 이 혁명은 프랑스의 절대왕정을 무너뜨리고 '자유, 평등, 박애'의 이념을 퍼뜨렸습니다."
+            },
+            {
+                question: "제1차 세계대전의 직접적인 원인이 된 사건은?",
+                options: ["러시아 혁명", "프란츠 페르디난트 대공 암살", "베르사유 조약 체결", "독일의 폴란드 침공"],
+                correct: 1,
+                explanation: "1914년 6월 28일, 오스트리아-헝가리 제국의 황태자 프란츠 페르디난트가 사라예보에서 암살당한 사건이 제1차 세계대전의 직접적인 계기가 되었습니다."
+            },
+            {
+                question: "다음 중 산업혁명이 가장 먼저 시작된 국가는?",
+                options: ["프랑스", "독일", "영국", "미국"],
+                correct: 2,
+                explanation: "산업혁명은 18세기 중반부터 영국에서 시작되었습니다. 증기기관의 발명과 직물 산업의 기계화가 산업혁명의 초기 특징이었습니다."
+            },
+            {
+                question: "냉전 시대에 대립했던 두 강대국은?",
+                options: ["영국과 프랑스", "미국과 소련", "중국과 일본", "독일과 러시아"],
+                correct: 1,
+                explanation: "냉전은 제2차 세계대전 이후부터 1991년 소련 붕괴까지 미국이 이끄는 서방 자본주의 진영과 소련이 이끄는 공산주의 진영 사이의 정치적, 이념적 대립 기간을 말합니다."
+            }
+        ];
+        
+        // 전체 퀴즈 데이터
+        let allQuizData = [];
+        
+        // 사용할 문제 개수 (사용자 설정 가능)
+        let questionCount = 10;
+        
+        // 시작 버튼 이벤트
+        startButton.addEventListener('click', async () => {
+            try {
+                // 문제 데이터 로드
+                allQuizData = await loadQuizData();
+                
+                // 로드 실패시 기본 데이터 사용
+                if (allQuizData.length === 0) {
+                    allQuizData = quizData;
+                }
+                
+                // 문제 수 업데이트
+                document.getElementById('totalQuestions').textContent = questionCount;
+                
+                // 전체 문제에서 랜덤하게 선택
+                startQuiz();
+            } catch (error) {
+                console.error("퀴즈 시작 오류:", error);
+                alert("퀴즈 데이터를 불러오는 중 오류가 발생했습니다. 다시 시도해주세요.");
+            }
+        });
+
+        // 다음 버튼 이벤트
+        nextButton.addEventListener('click', () => {
+            clearInterval(timer);
+            currentQuestion++;
+            
+            if (currentQuestion < questionCount) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        });
+
+        // 다시 시작 버튼 이벤트
+        restartButton.addEventListener('click', () => {
+            currentQuestion = 0;
+            score = 0;
+            resultScreen.style.display = 'none';
+            startScreen.style.display = 'block';
+        });
+        
+        // 문제 수 설정 이벤트
+        document.getElementById('questionCountSelect').addEventListener('change', function() {
+            questionCount = parseInt(this.value);
+            document.getElementById('totalQuestions').textContent = questionCount;
+        });
+
+        // 문제 데이터 로드 함수
+        async function loadQuizData() {
+            // 파일명 배열
+            const quizFiles = [
+                'quiz-data-1.js', // 1-25번 문제
+                'quiz-data-2.js', // 26-50번 문제
+                'quiz-data-3.js', // 51-75번 문제
+                'quiz-data-4.js', // 76-85번 문제
+                'quiz-data-5.js', // 86-95번 문제
+                'quiz-data-6.js'  // 96-100번 문제
+            ];
+            
+            // 모든 퀴즈 데이터를 저장할 배열
+            let allQuizData = [];
+            
+            // 각 파일 로드 및 데이터 합치기
+            for (const file of quizFiles) {
+                try {
+                    // 파일 동적 로드
+                    const response = await fetch(file);
+                    if (!response.ok) {
+                        throw new Error(`파일 로드 실패: ${file}`);
+                    }
+                    const text = await response.text();
+                    
+                    // eval 없이 JSON 파싱 (파일은 JSON 형식으로 저장됨)
+                    const fileData = JSON.parse(text);
+                    allQuizData = allQuizData.concat(fileData);
+                } catch (error) {
+                    console.error(`퀴즈 데이터 로드 오류: ${error.message}`);
+                }
+            }
+            
+            return allQuizData;
+        }
+        
+        // 게임 변수들
+        let currentQuestion = 0;
+        let score = 0;
+        let timer;
+        let timeLeft = 20;
+        let answered = false;
+
+        // 추가 역사 사실
+        const historyFacts = [
+            "<strong>알고 계셨나요?</strong> 메소포타미아의 수메르인들은 60진법을 사용했는데, 이것이 오늘날 우리가 시간(60초, 60분)을 측정하는 방식의 기원입니다.",
+            "<strong>알고 계셨나요?</strong> 알렉산더 대왕은 33세의 나이로 사망했지만, 그의 제국은 그리스에서 인도까지 이르렀습니다.",
+            "<strong>알고 계셨나요?</strong> 중국 진나라의 시황제는 만리장성 건설을 명령한 것으로 유명하지만, 그의 무덤에는 8,000개 이상의 테라코타 전사가 있습니다.",
+            "<strong>알고 계셨나요?</strong> 마야 문명은 초콜릿 음료를 신성한 것으로 여겼으며, 이를 '신들의 음식'이라고 불렀습니다.",
+            "<strong>알고 계셨나요?</strong> 바이킹들은 북아메리카를 콜럼버스보다 약 500년 먼저 발견했으며, 이를 '빈란드'라고 불렀습니다."
+        ];
+
+        // 퀴즈 시작 함수
+        function startQuiz() {
+            // 모든 문제에서 랜덤하게 선택
+            let selectedQuestions = [];
+            
+            // 전체 문제 수가 요청한 문제 수보다 많으면 랜덤 선택
+            if (allQuizData.length > questionCount) {
+                // 인덱스 배열 생성 (0부터 전체 문제 수-1까지)
+                const indices = Array.from({ length: allQuizData.length }, (_, i) => i);
+                
+                // 인덱스 섞기 (Fisher-Yates 알고리즘)
+                for (let i = indices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [indices[i], indices[j]] = [indices[j], indices[i]];
+                }
+                
+                // 필요한 만큼의 문제 선택
+                for (let i = 0; i < questionCount; i++) {
+                    selectedQuestions.push(allQuizData[indices[i]]);
+                }
+            } else {
+                // 전체 문제 수가 요청한 문제 수보다 적으면 모든 문제 사용
+                selectedQuestions = [...allQuizData];
+                questionCount = selectedQuestions.length; // 문제 수 조정
+            }
+            
+            // 전역 퀴즈 데이터 업데이트
+            quizData = selectedQuestions;
+            
+            // 상태 초기화
+            currentQuestion = 0;
+            score = 0;
+            
+            // 화면 전환
+            startScreen.style.display = 'none';
+            quizContainer.style.display = 'block';
+            showQuestion();
+        }
+
+        // 문제 표시 함수
+        function showQuestion() {
+            resetState();
+            
+            // 현재 문제 데이터
+            const currentQuizData = quizData[currentQuestion];
+            
+            // 진행 상황 업데이트
+            questionCountElement.textContent = `문제 ${currentQuestion + 1}/${quizData.length}`;
+            progressElement.style.width = `${((currentQuestion + 1) / quizData.length) * 100}%`;
+            
+            // 문제 표시
+            questionElement.textContent = currentQuizData.question;
+            
+            // 선택지 생성
+            currentQuizData.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.classList.add('option');
+                optionElement.textContent = option;
+                
+                optionElement.addEventListener('click', () => {
+                    if (!answered) {
+                        checkAnswer(index);
+                    }
+                });
+                
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            // 타이머 시작
+            startTimer();
+        }
+
+        // 타이머 시작 함수
+        function startTimer() {
+            timeLeft = 20;
+            timerElement.textContent = `남은 시간: ${timeLeft}초`;
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = `남은 시간: ${timeLeft}초`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    if (!answered) {
+                        const options = document.querySelectorAll('.option');
+                        const correctIndex = quizData[currentQuestion].correct;
+                        
+                        options[correctIndex].classList.add('correct');
+                        feedbackElement.textContent = "시간 초과! 정답을 확인하세요.";
+                        explanationElement.textContent = quizData[currentQuestion].explanation;
+                        explanationElement.style.display = 'block';
+                        answered = true;
+                        nextButton.style.display = 'block';
+                    }
+                }
+            }, 1000);
+        }
+
+        // 답변 확인 함수
+        function checkAnswer(selectedIndex) {
+            clearInterval(timer);
+            answered = true;
+            
+            const options = document.querySelectorAll('.option');
+            const correctIndex = quizData[currentQuestion].correct;
+            
+            if (selectedIndex === correctIndex) {
+                options[selectedIndex].classList.add('correct');
+                feedbackElement.textContent = "정답입니다!";
+                score++;
+            } else {
+                options[selectedIndex].classList.add('incorrect');
+                options[correctIndex].classList.add('correct');
+                feedbackElement.textContent = "틀렸습니다!";
+            }
+            
+            // 설명 표시
+            explanationElement.textContent = quizData[currentQuestion].explanation;
+            explanationElement.style.display = 'block';
+            
+            // 다음 버튼 표시
+            nextButton.style.display = 'block';
+        }
+
+        // 결과 화면 표시 함수
+        function showResults() {
+            quizContainer.style.display = 'none';
+            resultScreen.style.display = 'block';
+            
+            // 점수 표시
+            scoreElement.textContent = `점수: ${score}/${quizData.length}`;
+            
+            // 결과 메시지와 메달 설정
+            if (score >= Math.round(quizData.length * 0.9)) {
+                medalElement.textContent = '🏆';
+                resultMessageElement.textContent = "훌륭합니다! 당신은 세계사 전문가입니다!";
+            } else if (score >= Math.round(quizData.length * 0.7)) {
+                medalElement.textContent = '🥈';
+                resultMessageElement.textContent = "잘했습니다! 세계사에 대한 지식이 풍부합니다!";
+            } else if (score >= Math.round(quizData.length * 0.5)) {
+                medalElement.textContent = '🥉';
+                resultMessageElement.textContent = "좋습니다! 세계사의 기본 지식을 잘 알고 있습니다.";
+            } else {
+                medalElement.textContent = '📚';
+                resultMessageElement.textContent = "조금 더 공부가 필요합니다. 다시 도전해보세요!";
+            }
+            
+            // 랜덤한 역사 사실 표시
+            const randomFact = historyFacts[Math.floor(Math.random() * historyFacts.length)];
+            finalFactElement.innerHTML = randomFact;
+        }
+
+        // 상태 초기화 함수
+        function resetState() {
+            answered = false;
+            nextButton.style.display = 'none';
+            feedbackElement.textContent = '';
+            explanationElement.style.display = 'none';
+            
+            // 선택지 컨테이너 비우기
+            while (optionsContainer.firstChild) {
+                optionsContainer.removeChild(optionsContainer.firstChild);
+            }
+        }
+    </script>
+</body>
+</html>
