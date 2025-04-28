@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>중학교 세계사 퀴즈</title>
+    <style>
+        body {
+            font-family: 'Nanum Gothic', sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .setting-box {
+            background-color: #e8f4fc;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .select-style {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 2px solid #3498db;
+            background-color: white;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+        }
+        h1 {
+            color: #3498db;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .quiz-container {
+            display: none;
+        }
+        .quiz-container.active {
+            display: block;
+        }
+        .start-screen, .result-screen {
+            text-align: center;
+        }
+        .button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #2980b9;
+        }
+        .options {
+            margin-top: 20px;
+        }
+        .option {
+            background-color: #f1f1f1;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option:hover {
+            background-color: #e0e0e0;
+        }
+        .option.correct {
+            background-color: #a8f0c6;
+            border-color: #2ecc71;
+        }
+        .option.incorrect {
+            background-color: #f0a8a8;
+            border-color: #e74c3c;
+        }
+        .question-count {
+            text-align: right;
+            margin-bottom: 20px;
+            color: #7f8c8d;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        .feedback {
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+        .timer {
+            text-align: right;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+        .history-fact {
+            background-color: #e8f4fc;
+            border-left: 4px solid #3498db;
+            padding: 10px 15px;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        .explanation {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+        .result-card {
+            background-color: #e8f4fc;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+            margin: 10px 0;
+        }
+        .medal {
+            font-size: 50px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>세계사 탐험 퀴즈</h1>
+        
+        <!-- 시작 화면 -->
+        <div class="start-screen" id="startScreen">
+            <h2>중학교 2학년 세계사 퀴즈에 오신 것을 환영합니다!</h2>
+            <p>이 퀴즈는 고대 문명부터 현대까지의 중요한 세계사 사건들을 다룹니다.</p>
+            <p>총 <span id="totalQuestions">10</span>개의 문제가 있으며, 각 문제마다 설명을 볼 수 있습니다.</p>
+            
+            <div class="setting-box">
+                <label for="questionCountSelect">문제 수 선택:</label>
+                <select id="questionCountSelect" class="select-style">
+                    <option value="10">10문제</option>
+                    <option value="20">20문제</option>
+                    <option value="30">30문제</option>
+                    <option value="50">50문제</option>
+                    <option value="100">100문제</option>
+                </select>
+            </div>
+            
+            <div class="history-fact">
+                <p><strong>알고 계셨나요?</strong> 인류 최초의 문자는 약 5,000년 전 메소포타미아의 수메르인들이 발명한 설형문자입니다.</p>
+            </div>
+            <button class="button" id="startButton">퀴즈 시작하기</button>
+        </div>
+        
+        <!-- 퀴즈 화면 -->
+        <div class="quiz-container" id="quizContainer">
+            <div class="timer" id="timer">남은 시간: 20초</div>
+            <div class="question-count" id="questionCount">문제 1/10</div>
+            <div class="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+            <h2 id="question">질문이 여기에 표시됩니다.</h2>
+            <div class="options" id="options">
+                <!-- 선택지들이 여기에 동적으로 추가됩니다 -->
+            </div>
+            <div class="feedback" id="feedback"></div>
+            <div class="explanation" id="explanation"></div>
+            <button class="button" id="nextButton" style="display: none;">다음 문제</button>
+        </div>
+        
+        <!-- 결과 화면 -->
+        <div class="result-screen" id="resultScreen" style="display: none;">
+            <h2>퀴즈 완료!</h2>
+            <div class="medal" id="medal">🏆</div>
+            <div class="score" id="score">점수: 8/10</div>
+            <div class="result-card">
+                <p id="resultMessage">훌륭합니다! 세계사에 대한 이해가 탁월합니다!</p>
+                <div class="history-fact">
+                    <p id="finalFact"><strong>알고 계셨나요?</strong> 중세 유럽에서는 약 1,000년 동안 라틴어가 학문과 종교의 공용어로 사용되었습니다.</p>
+                </div>
+            </div>
+            <button class="button" id="restartButton">다시 시작하기</button>
+        </div>
+    </div>
+
+    <!-- 퀴즈 데이터 로드 -->
+    <script src="quiz-data.js"></script>
+    <script src="quiz-data2.js"></script>
+    <script src="quiz-data3.js"></script>
+    <script src="quiz-game.js"></script>
+</body>
+</html>
